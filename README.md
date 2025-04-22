@@ -53,8 +53,8 @@ ARC School Portal is a comprehensive educational management system designed to s
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/aurora-school-verse.git
-   cd aurora-school-verse
+   git clone https://github.com/Akhpie/school-portal-hackathon.git
+   cd hackathon-arc-portal
    ```
 
 2. Install dependencies:
