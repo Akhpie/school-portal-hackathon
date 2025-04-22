@@ -37,7 +37,7 @@ interface AppContextType {
 }
 
 const defaultContext: AppContextType = {
-  theme: "light",
+  theme: "dark",
   setTheme: () => {},
   isLoggedIn: false,
   currentUser: null,
@@ -131,7 +131,7 @@ const getInitialTheme = (): ThemeType => {
       console.error("Error reading theme from localStorage:", e);
     }
   }
-  return "light";
+  return "dark";
 };
 
 // Function to get initial user from localStorage
