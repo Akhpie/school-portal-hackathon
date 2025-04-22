@@ -107,22 +107,3 @@ src/
 ├── App.tsx           # Main application component
 └── main.tsx         # Application entry point
 ```
-
-## Deployment
-
-For deployment, build the application and host it on your preferred hosting platform:
-
-1. Netlify, Vercel, or GitHub Pages: Connect your repository for continuous deployment
-2. Traditional web servers: Upload the generated `dist/` directory to your hosting environment
-
-## Contributing
-
-We welcome contributions to the ARC School Portal! Please feel free to submit pull requests or open issues to improve the platform.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contact
-
-For more information about ARC School Portal, please contact us at support@arcschool.com
