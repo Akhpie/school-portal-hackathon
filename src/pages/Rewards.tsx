@@ -108,13 +108,31 @@ const Rewards = () => {
   // Load redemption history from localStorage
   useEffect(() => {
     const savedHistory = localStorage.getItem("redeemHistory");
+    console.log("Loaded history from localStorage:", savedHistory);
     if (savedHistory) {
       setRedeemHistory(JSON.parse(savedHistory));
+    } else {
+      // Create a test history item for debugging
+      const testHistory = [
+        {
+          id: `test-item-${Date.now()}`,
+          item: {
+            name: "Test Reward",
+            description: "This is a test reward item for debugging",
+            pointsCost: 100,
+            iconName: "gift", // Use name instead of React element
+          },
+          redeemedAt: new Date(),
+          status: "completed",
+        },
+      ];
+      saveRedeemHistory(testHistory);
     }
   }, []);
 
   // Save redemption history to localStorage
   const saveRedeemHistory = (history: any[]) => {
+    console.log("Saving history to localStorage:", history);
     localStorage.setItem("redeemHistory", JSON.stringify(history));
     setRedeemHistory(history);
   };
@@ -122,11 +140,18 @@ const Rewards = () => {
   // Handle redeeming an item
   const handleRedeem = (item: any) => {
     if (totalPoints >= item.pointsCost) {
+      // Create a copy of the item with iconName instead of icon
+      const itemForStorage = {
+        ...item,
+        iconName: item.id, // Use the id as the iconName for simplicity
+      };
+      delete itemForStorage.icon; // Remove the JSX icon element
+
       // Add to redemption history
       const newHistory = [
         {
           id: `${item.id}-${Date.now()}`,
-          item: item,
+          item: itemForStorage,
           redeemedAt: new Date(),
           status: "processing",
         },
@@ -167,7 +192,7 @@ const Rewards = () => {
               convertAmount * CONVERSION_RATE
             ).toFixed(2)}`,
             pointsCost: convertAmount,
-            icon: <ArrowLeftRight className="h-5 w-5 text-green-500" />,
+            iconName: "ArrowLeftRight",
           },
           redeemedAt: new Date(),
           status: "completed",
@@ -193,6 +218,29 @@ const Rewards = () => {
       toast.error("Not enough points for conversion!", {
         description: `You need ${convertAmount - totalPoints} more points`,
       });
+    }
+  };
+
+  const renderIcon = (iconName: string) => {
+    switch (iconName) {
+      case "canteen_voucher":
+        return <Coffee className="h-5 w-5 text-amber-500" />;
+      case "music_subscription":
+        return <Music className="h-5 w-5 text-green-500" />;
+      case "movie_ticket":
+        return <TicketIcon className="h-5 w-5 text-blue-500" />;
+      case "shopping_voucher":
+        return <ShoppingBag className="h-5 w-5 text-purple-500" />;
+      case "test_retake":
+        return <TrendingUp className="h-5 w-5 text-red-500" />;
+      case "power_boost":
+        return <Zap className="h-5 w-5 text-yellow-500" />;
+      case "ArrowLeftRight":
+        return <ArrowLeftRight className="h-5 w-5 text-green-500" />;
+      case "gift":
+        return <Gift className="h-5 w-5 text-primary" />;
+      default:
+        return <Gift className="h-5 w-5 text-primary" />;
     }
   };
 
@@ -245,7 +293,10 @@ const Rewards = () => {
         <Tabs
           defaultValue="redeem"
           value={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={(value) => {
+            console.log("Tab changed to:", value);
+            setActiveTab(value);
+          }}
           className="w-full"
         >
           <TabsList className="grid grid-cols-3 mb-6">
@@ -472,9 +523,7 @@ const Rewards = () => {
                           className="flex gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors"
                         >
                           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            {historyItem.item.icon || (
-                              <Gift className="h-5 w-5 text-primary" />
-                            )}
+                            {renderIcon(historyItem.item.iconName)}
                           </div>
                           <div className="flex-1">
                             <div className="flex justify-between">
@@ -531,12 +580,25 @@ const Rewards = () => {
                     </div>
                   </ScrollArea>
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <div className="text-4xl mb-3">🏆</div>
-                    <p className="mb-1">No redemption history yet</p>
-                    <p className="text-sm">
-                      Redeem your points to see history here
+                  <div className="text-center py-16 px-4">
+                    <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-muted mb-4">
+                      <CreditCard className="h-10 w-10 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">
+                      No Redemption History
+                    </h3>
+                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                      You haven't redeemed any rewards yet. Start by redeeming
+                      rewards or converting points to see your history here.
                     </p>
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => setActiveTab("redeem")}
+                    >
+                      <Gift className="h-4 w-4" />
+                      <span>Browse Rewards</span>
+                    </Button>
                   </div>
                 )}
               </CardContent>
@@ -561,7 +623,7 @@ const Rewards = () => {
               <div className="py-4">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    {confirmRedeemItem.icon}
+                    {renderIcon(confirmRedeemItem.id)}
                   </div>
                   <div>
                     <div className="font-medium text-lg">
