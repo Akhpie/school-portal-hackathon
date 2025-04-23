@@ -19,11 +19,14 @@ ARC School Portal is a comprehensive educational management system designed to s
 - **Career Pathway**: Career guidance and educational pathway planning tools
 - **Wellness**: Resources for mental health, physical wellness, and student support
 - **Rewards**: Gamified learning incentives and recognition system
+- **Internships**: Available Internships and Jobs are shown to the students for easy apply.
+- **Mentornship**: Mentorship given by school seniors and Alumni's.
+- **Themes**: Four themes ( Light, dark, Blue, Pink ). Choose the Aesthetic you feel and go with the flow!
 
 ### Communication Tools
 
-- **Messages**: Secure messaging system between students, teachers, and parents
-- **Notifications**: Real-time alerts for deadlines, events, and important announcements
+- **Messages**: Secure messaging system between students, teachers, and parents ( mockup )
+- **Notifications**: Real-time alerts for deadlines, events, and important announcements ( mockup )
 
 ### Additional Resources
 
