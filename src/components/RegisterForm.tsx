@@ -29,7 +29,7 @@ const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  studentId: z.string().min(3, "Student ID is required"),
+  studentId: z.string().min(1, "Student ID number is required"),
   grade: z.string().min(1, "Grade is required"),
   section: z.string().min(1, "Section is required"),
 });
@@ -62,7 +62,7 @@ const RegisterForm = () => {
         name: data.name,
         email: data.email,
         password: data.password,
-        studentId: data.studentId,
+        studentId: `STD-${data.studentId}`,
         grade: data.grade,
         section: data.section,
         role: "student",
@@ -83,7 +83,7 @@ const RegisterForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full max-w-lg">
       <div className="space-y-2 text-center mb-8">
         <h1 className="text-3xl font-bold gradient-text">Create an Account</h1>
         <p className="text-muted-foreground">
@@ -166,15 +166,24 @@ const RegisterForm = () => {
             )}
           />
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-12 gap-4">
             <FormField
               control={form.control}
               name="studentId"
               render={({ field }) => (
-                <FormItem className="col-span-3 md:col-span-1">
+                <FormItem className="col-span-6">
                   <FormLabel>Student ID</FormLabel>
                   <FormControl>
-                    <Input placeholder="ST12345" className="h-11" {...field} />
+                    <div className="flex h-11">
+                      <div className="flex items-center justify-center px-3 border border-r-0 border-input rounded-l-md bg-muted text-muted-foreground">
+                        STD-
+                      </div>
+                      <Input
+                        className="rounded-l-none h-full w-full"
+                        placeholder="12345"
+                        {...field}
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -185,7 +194,7 @@ const RegisterForm = () => {
               control={form.control}
               name="grade"
               render={({ field }) => (
-                <FormItem className="col-span-3 md:col-span-1">
+                <FormItem className="col-span-3">
                   <FormLabel>Grade</FormLabel>
                   <Select
                     onValueChange={field.onChange}
@@ -215,7 +224,7 @@ const RegisterForm = () => {
               control={form.control}
               name="section"
               render={({ field }) => (
-                <FormItem className="col-span-3 md:col-span-1">
+                <FormItem className="col-span-3">
                   <FormLabel>Section</FormLabel>
                   <Select
                     onValueChange={field.onChange}

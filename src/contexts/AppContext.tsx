@@ -222,38 +222,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     setup();
   }, []);
 
-  useEffect(() => {
-    if (
-      process.env.NODE_ENV === "development" &&
-      !isLoggedIn &&
-      !localStorage.getItem("currentUser")
-    ) {
-      console.log("Development mode: Auto-logging in as Jane Doe");
-      const autoLogin = async () => {
-        try {
-          // First check if the user exists in IndexedDB
-          const store = await getUsersStore();
-          const emailIndex = store.index("email");
-          const request = emailIndex.get("jane@example.com");
-
-          request.onsuccess = async () => {
-            if (!request.result) {
-              // If user doesn't exist, add Jane to the database
-              console.log("Jane Doe not found in IndexedDB, adding her first");
-              await initializeMockUsers();
-            }
-
-            // Now try to log in
-            await login("jane@example.com", "password123");
-          };
-        } catch (error) {
-          console.error("Auto-login failed:", error);
-        }
-      };
-      autoLogin();
-    }
-  }, []);
-
   // Custom setTheme function that updates both state and localStorage
   const setTheme = (newTheme: ThemeType) => {
     console.log("Setting theme to:", newTheme);
