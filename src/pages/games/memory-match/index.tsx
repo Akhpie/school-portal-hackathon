@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
+import { useRewards } from "@/contexts/RewardsContext";
 
 interface MemoryCard {
   id: number;
@@ -15,105 +16,169 @@ interface MemoryCard {
 
 const MemoryMatchGame = () => {
   const navigate = useNavigate();
+  const { addPoints, addReward } = useRewards();
   const [cards, setCards] = useState<MemoryCard[]>([]);
-  const [flippedCards, setFlippedCards] = useState<number[]>([]);
+  const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [endTime, setEndTime] = useState<number | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [matchesFound, setMatchesFound] = useState(0);
 
   const cardContents = ["🧮", "🔬", "🧪", "📚", "🔭", "🌍", "📝", "🎨"];
 
   const initializeGame = () => {
     // Create pairs of cards
-    const initialCards: MemoryCard[] = [...cardContents, ...cardContents].map(
-      (content, index) => ({
-        id: index,
-        content,
-        isFlipped: false,
-        isMatched: false,
-      })
-    );
+    const cardPairs = [...cardContents, ...cardContents];
 
     // Shuffle cards
-    for (let i = initialCards.length - 1; i > 0; i--) {
+    for (let i = cardPairs.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [initialCards[i], initialCards[j]] = [initialCards[j], initialCards[i]];
+      [cardPairs[i], cardPairs[j]] = [cardPairs[j], cardPairs[i]];
     }
 
-    setCards(initialCards);
-    setFlippedCards([]);
+    // Create card objects
+    const newCards = cardPairs.map((content, id) => ({
+      id,
+      content,
+      isFlipped: false,
+      isMatched: false,
+    }));
+
+    // Reset game state
+    setCards(newCards);
+    setFlippedIndices([]);
     setMoves(0);
     setGameOver(false);
     setStartTime(Date.now());
     setEndTime(null);
+    setIsProcessing(false);
+    setMatchesFound(0);
   };
 
-  const handleCardClick = (id: number) => {
+  // Handle clicking a card
+  const handleCardClick = (index: number) => {
+    // Ignore clicks when processing or if game is over
+    if (isProcessing || gameOver) return;
+
     // Ignore click if card is already flipped or matched
-    if (cards[id].isFlipped || cards[id].isMatched) return;
-    // Ignore if already two cards flipped
-    if (flippedCards.length >= 2) return;
+    if (cards[index].isFlipped || cards[index].isMatched) return;
+
+    // Ignore if we already have 2 cards flipped
+    if (flippedIndices.length >= 2) return;
 
     // Flip the card
-    setCards((prev) =>
-      prev.map((card) => (card.id === id ? { ...card, isFlipped: true } : card))
-    );
+    const newCards = [...cards];
+    newCards[index].isFlipped = true;
+    setCards(newCards);
 
-    // Add to flipped cards
-    setFlippedCards((prev) => [...prev, id]);
+    // Add to flipped indices
+    setFlippedIndices((prev) => [...prev, index]);
   };
 
-  // Check for matches
+  // Check for matches when two cards are flipped
   useEffect(() => {
-    if (flippedCards.length === 2) {
-      setMoves((prev) => prev + 1);
+    // Only check when exactly 2 cards are flipped
+    if (flippedIndices.length !== 2) return;
 
-      const [first, second] = flippedCards;
+    // Increment moves counter when two cards are flipped
+    setMoves((prev) => prev + 1);
 
-      if (cards[first].content === cards[second].content) {
-        // Match found
-        setCards((prev) =>
-          prev.map((card) =>
-            card.id === first || card.id === second
-              ? { ...card, isMatched: true }
-              : card
-          )
-        );
-        setFlippedCards([]);
+    // Prevent further card flips while processing
+    setIsProcessing(true);
 
-        toast({
-          title: "Match Found!",
-          variant: "default",
+    const [firstIndex, secondIndex] = flippedIndices;
+    const firstCard = cards[firstIndex];
+    const secondCard = cards[secondIndex];
+
+    // Check if contents match
+    if (firstCard.content === secondCard.content) {
+      // It's a match!
+      setTimeout(() => {
+        // Mark cards as matched
+        const newCards = [...cards];
+        newCards[firstIndex].isMatched = true;
+        newCards[secondIndex].isMatched = true;
+        newCards[firstIndex].isFlipped = false;
+        newCards[secondIndex].isFlipped = false;
+        setCards(newCards);
+
+        // Clear flipped indices
+        setFlippedIndices([]);
+
+        // Increment match counter
+        setMatchesFound((prev) => {
+          const newCount = prev + 1;
+
+          // Show match notification
+          toast({
+            title: `Match Found! (${newCount} of 8)`,
+            variant: "default",
+          });
+
+          return newCount;
         });
-      } else {
-        // No match
-        setTimeout(() => {
-          setCards((prev) =>
-            prev.map((card) =>
-              card.id === first || card.id === second
-                ? { ...card, isFlipped: false }
-                : card
-            )
-          );
-          setFlippedCards([]);
-        }, 1000);
-      }
-    }
-  }, [flippedCards, cards]);
 
-  // Check for game over
+        // Allow flipping more cards
+        setIsProcessing(false);
+      }, 500);
+    } else {
+      // Not a match, flip cards back after a delay
+      setTimeout(() => {
+        const newCards = [...cards];
+        newCards[firstIndex].isFlipped = false;
+        newCards[secondIndex].isFlipped = false;
+        setCards(newCards);
+
+        // Clear flipped indices
+        setFlippedIndices([]);
+
+        // Allow flipping more cards
+        setIsProcessing(false);
+      }, 1000);
+    }
+  }, [flippedIndices, cards]);
+
+  // Check for game completion
   useEffect(() => {
-    if (cards.length > 0 && cards.every((card) => card.isMatched)) {
+    // Game is complete when all 8 matches are found
+    if (matchesFound === 8 && !gameOver) {
       setGameOver(true);
       setEndTime(Date.now());
+
+      // Calculate score based on moves and time
+      const timeInSeconds = Math.floor(
+        ((endTime || Date.now()) - (startTime || Date.now())) / 1000
+      );
+      const basePoints = 100;
+      const movesPenalty = Math.max(0, moves - 8) * 5; // Penalty for extra moves
+      const timePenalty = Math.max(0, timeInSeconds - 60) * 0.5; // Penalty for extra time
+      const totalPoints = Math.max(
+        10,
+        Math.floor(basePoints - movesPenalty - timePenalty)
+      );
+
+      // Add points to user
+      addPoints(totalPoints);
+
+      // Add special reward for efficient play
+      if (moves <= 10) {
+        addReward({
+          name: "Memory Master",
+          description: "Completed Memory Match in 10 moves or less",
+          icon: "🧠",
+        });
+        addPoints(25); // Bonus points
+      }
+
       toast({
         title: "Game Completed!",
-        description: `You finished in ${moves} moves!`,
+        description: `You finished in ${moves} moves and earned ${totalPoints} points!`,
         variant: "default",
       });
     }
-  }, [cards, moves]);
+  }, [matchesFound, gameOver, moves, startTime, endTime, addPoints, addReward]);
 
   // Initialize game on mount
   useEffect(() => {
@@ -163,18 +228,32 @@ const MemoryMatchGame = () => {
                   key={card.id}
                   className={`aspect-square flex items-center justify-center rounded-md cursor-pointer text-2xl
                     ${
-                      card.isFlipped || card.isMatched
+                      card.isFlipped
                         ? "bg-primary text-primary-foreground"
+                        : card.isMatched
+                        ? "bg-green-500 text-primary-foreground"
                         : "bg-muted hover:bg-muted/80"
                     }
                     transition-all duration-300
                   `}
                   onClick={() => handleCardClick(card.id)}
+                  data-matched={card.isMatched}
+                  data-flipped={card.isFlipped}
                 >
                   {card.isFlipped || card.isMatched ? card.content : ""}
                 </div>
               ))}
             </div>
+            {gameOver && (
+              <div className="mt-4 text-center">
+                <p className="text-green-500 font-medium mb-2">
+                  Game completed in {moves} moves and {getElapsedTime()}!
+                </p>
+                <Button onClick={initializeGame} className="mt-2">
+                  Play Again
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

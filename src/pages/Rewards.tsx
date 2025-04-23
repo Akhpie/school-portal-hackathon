@@ -41,11 +41,11 @@ import {
   Zap,
   TrendingUp,
   TicketIcon,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { Progress } from "@/components/ui/progress";
 
-// Conversion rate - 1 compass point = 0.5 INR
 const CONVERSION_RATE = 0.5;
 
 // Available redemption options
@@ -98,7 +98,7 @@ const redeemOptions = [
 ];
 
 const Rewards = () => {
-  const { rewards, totalPoints, addPoints } = useRewards();
+  const { rewards, totalPoints, addPoints, resetPoints } = useRewards();
   const [redeemHistory, setRedeemHistory] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("redeem");
   const [convertAmount, setConvertAmount] = useState<number>(100);
@@ -137,17 +137,14 @@ const Rewards = () => {
     setRedeemHistory(history);
   };
 
-  // Handle redeeming an item
   const handleRedeem = (item: any) => {
     if (totalPoints >= item.pointsCost) {
-      // Create a copy of the item with iconName instead of icon
       const itemForStorage = {
         ...item,
-        iconName: item.id, // Use the id as the iconName for simplicity
+        iconName: item.id,
       };
-      delete itemForStorage.icon; // Remove the JSX icon element
+      delete itemForStorage.icon;
 
-      // Add to redemption history
       const newHistory = [
         {
           id: `${item.id}-${Date.now()}`,
@@ -158,16 +155,13 @@ const Rewards = () => {
         ...redeemHistory,
       ];
 
-      // Save to history and deduct points
       saveRedeemHistory(newHistory);
       addPoints(-item.pointsCost);
 
-      // Show success message
       toast.success(`Successfully redeemed ${item.name}!`, {
         description: "Check your redemption history for details",
       });
 
-      // Close dialog if open
       setConfirmRedeemItem(null);
     } else {
       toast.error("Not enough points to redeem this item!", {
@@ -176,13 +170,10 @@ const Rewards = () => {
     }
   };
 
-  // Handle currency conversion
   const handleConversion = () => {
     if (totalPoints >= convertAmount) {
-      // Deduct points
       addPoints(-convertAmount);
 
-      // Add to history
       const newHistory = [
         {
           id: `currency-${Date.now()}`,
@@ -203,7 +194,6 @@ const Rewards = () => {
 
       saveRedeemHistory(newHistory);
 
-      // Show success message
       toast.success(
         `Successfully converted ${convertAmount} points to ₹${(
           convertAmount * CONVERSION_RATE
@@ -218,6 +208,17 @@ const Rewards = () => {
       toast.error("Not enough points for conversion!", {
         description: `You need ${convertAmount - totalPoints} more points`,
       });
+    }
+  };
+
+  const handleResetPoints = () => {
+    if (
+      window.confirm(
+        "Are you sure you want to reset your points? This cannot be undone."
+      )
+    ) {
+      resetPoints();
+      toast.success("Points reset successfully");
     }
   };
 
@@ -247,7 +248,6 @@ const Rewards = () => {
   return (
     <DashboardLayout>
       <div className="container mx-auto space-y-6">
-        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold">Rewards Center</h1>
@@ -260,19 +260,37 @@ const Rewards = () => {
               <Medal className="h-4 w-4 mr-1" /> Level{" "}
               {Math.floor(totalPoints / 500) + 1}
             </Badge>
-            <Card className="bg-gradient-to-r from-primary/20 to-primary/5 border-none shadow-sm">
-              <CardContent className="p-4 flex gap-2 items-center">
-                <Trophy className="h-5 w-5 text-yellow-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Points</p>
-                  <p className="text-2xl font-bold">{totalPoints}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col">
+              <Card className="bg-gradient-to-r from-primary/20 to-primary/5 border-none shadow-sm">
+                <CardContent className="p-4 flex gap-2 items-center">
+                  <Trophy className="h-5 w-5 text-yellow-500" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Total Points
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-2xl font-bold">
+                        {isNaN(totalPoints) ? 0 : totalPoints}
+                      </p>
+                      {isNaN(totalPoints) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleResetPoints}
+                          className="h-7 px-2 text-xs"
+                        >
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                          Fix
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
 
-        {/* Progress to next level */}
         <Card className="border-none shadow-sm bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
           <CardContent className="py-4">
             <div className="flex justify-between items-center mb-2 text-sm">
@@ -289,7 +307,6 @@ const Rewards = () => {
           </CardContent>
         </Card>
 
-        {/* Main content */}
         <Tabs
           defaultValue="redeem"
           value={activeTab}
@@ -314,7 +331,6 @@ const Rewards = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Redeem Tab */}
           <TabsContent value="redeem" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {redeemOptions.map((option) => (
@@ -372,7 +388,6 @@ const Rewards = () => {
             </div>
           </TabsContent>
 
-          {/* Convert Tab */}
           <TabsContent value="convert" className="space-y-4">
             <Card>
               <CardHeader>
@@ -501,7 +516,6 @@ const Rewards = () => {
             </Card>
           </TabsContent>
 
-          {/* History Tab */}
           <TabsContent value="history" className="space-y-4">
             <Card>
               <CardHeader>
@@ -606,7 +620,6 @@ const Rewards = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Confirmation Dialog */}
         <Dialog
           open={!!confirmRedeemItem}
           onOpenChange={() => setConfirmRedeemItem(null)}

@@ -34,6 +34,9 @@ const TypingSpeedGame = () => {
     description: "",
     points: 0,
   });
+  const [keyPressCount, setKeyPressCount] = useState(0);
+  const [lastInputLength, setLastInputLength] = useState(0);
+  const [cheatingDetected, setCheatingDetected] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const passages = [
@@ -56,6 +59,9 @@ const TypingSpeedGame = () => {
     setAccuracy(0);
     setIsPlaying(true);
     setGameComplete(false);
+    setKeyPressCount(0);
+    setLastInputLength(0);
+    setCheatingDetected(false);
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
@@ -63,8 +69,38 @@ const TypingSpeedGame = () => {
     }, 100);
   };
 
+  // Handle key press to count actual keystrokes
+  const handleKeyPress = () => {
+    setKeyPressCount((prev) => prev + 1);
+  };
+
+  // Detect paste event and prevent it
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    setCheatingDetected(true);
+    toast({
+      title: "Cheating Detected!",
+      description: "Copy-pasting is not allowed in this game.",
+      variant: "destructive",
+    });
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+
+    // Detect suspicious input (potential programmatic paste or automated input)
+    if (value.length - lastInputLength > 5) {
+      setCheatingDetected(true);
+      toast({
+        title: "Suspicious Activity Detected",
+        description:
+          "Please type naturally without using shortcuts or automated tools.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLastInputLength(value.length);
     setUserInput(value);
 
     // Start the timer on first keypress
@@ -73,15 +109,44 @@ const TypingSpeedGame = () => {
     }
 
     // Check if the typing is complete
-    if (value === text) {
+    if (value === text && !cheatingDetected) {
       const endTimeValue = Date.now();
       setEndTime(endTimeValue);
 
       // Calculate WPM: (characters typed / 5) / time in minutes
       const timeInMinutes =
         (endTimeValue - (startTime || endTimeValue)) / 60000;
+
+      // Validate minimum time to prevent unrealistic speed
+      if (timeInMinutes < 0.05) {
+        // At least 3 seconds for any passage
+        setCheatingDetected(true);
+        toast({
+          title: "Unrealistic Typing Speed",
+          description:
+            "Please complete the test fairly without automated tools.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Verify keypress count is reasonable
+      if (keyPressCount < text.length * 0.7) {
+        setCheatingDetected(true);
+        toast({
+          title: "Suspicious Input Detected",
+          description:
+            "Your keystrokes don't match what would be expected for normal typing.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const wordsTyped = text.length / 5; // Standard: 5 chars = 1 word
       const calculatedWpm = Math.round(wordsTyped / timeInMinutes);
+
+      // Cap unrealistic WPM scores
+      const cappedWpm = Math.min(calculatedWpm, 200);
 
       // Calculate accuracy
       let correctChars = 0;
@@ -90,13 +155,13 @@ const TypingSpeedGame = () => {
       }
       const calculatedAccuracy = Math.round((correctChars / text.length) * 100);
 
-      setWpm(calculatedWpm);
+      setWpm(cappedWpm);
       setAccuracy(calculatedAccuracy);
       setIsPlaying(false);
       setGameComplete(true);
 
       // Award points and possibly a reward
-      awardPoints(calculatedWpm, calculatedAccuracy);
+      awardPoints(cappedWpm, calculatedAccuracy);
     }
   };
 
@@ -276,10 +341,18 @@ const TypingSpeedGame = () => {
                   type="text"
                   value={userInput}
                   onChange={handleInputChange}
+                  onKeyDown={handleKeyPress}
+                  onPaste={handlePaste}
                   placeholder="Start typing here..."
                   className="w-full"
                   autoComplete="off"
                 />
+                {cheatingDetected && (
+                  <div className="text-destructive text-sm">
+                    Cheating detected! Please restart the game and type
+                    naturally.
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
