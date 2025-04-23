@@ -29,6 +29,8 @@ import TypingSpeedGame from "./pages/games/typing-speed";
 import HangmanGame from "./pages/games/hangman";
 import About from "./pages/About";
 import Rewards from "./pages/Rewards";
+import Internships from "./pages/Internships";
+import Mentorship from "./pages/Mentorship";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -62,6 +64,8 @@ const App = () => (
             <Route path="/games/typing-speed" element={<TypingSpeedGame />} />
             <Route path="/games/hangman" element={<HangmanGame />} />
             <Route path="/rewards" element={<Rewards />} />
+            <Route path="/internships" element={<Internships />} />
+            <Route path="/mentorship" element={<Mentorship />} />
             {/* Add other routes as needed */}
             <Route path="*" element={<NotFound />} />
           </Routes>

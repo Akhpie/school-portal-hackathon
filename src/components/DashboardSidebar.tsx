@@ -105,6 +105,15 @@ const navCategories: NavCategory[] = [
     ],
   },
   {
+    id: "opportunities",
+    label: "Opportunities",
+    icon: Briefcase,
+    items: [
+      { icon: Briefcase, label: "Internships", path: "/internships" },
+      { icon: UserRound, label: "Mentorship", path: "/mentorship" },
+    ],
+  },
+  {
     id: "communication",
     label: "Communication",
     icon: MessageCircle,
