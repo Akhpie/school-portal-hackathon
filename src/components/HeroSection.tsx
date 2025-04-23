@@ -65,7 +65,7 @@ const HeroSection = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-2xl mx-auto text-center mb-16">
           <h1
-            className={`text-5xl md:text-6xl font-bold mb-6 gradient-text leading-tight transition-all duration-1000 transform ${
+            className={`text-5xl pb-2 md:text-6xl font-bold mb-6 gradient-text leading-tight transition-all duration-1000 transform ${
               isVisible
                 ? "translate-y-0 opacity-100"
                 : "translate-y-10 opacity-0"
